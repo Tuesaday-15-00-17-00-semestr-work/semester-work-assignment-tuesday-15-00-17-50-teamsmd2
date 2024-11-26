@@ -21,7 +21,7 @@ public class UserRepository {
     }
 
     public List<User> findAll() {
-        return jdbcClient.sql("SELECT * FROM users")
+        return jdbcClient.sql("SELECT * FROM users;")
                 .query(User.class)
                 .list();
     }
