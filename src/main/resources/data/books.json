@@ -1,0 +1,32 @@
+{
+  "books": [
+    {
+        "id": 1,
+        "title": "The Hobbit",
+        "author": "J.R.R. Tolkien",
+        "isbn": "978-0-395-07122-9",
+        "availableCopies": 5
+    },
+    {
+        "id": 2,
+        "title": "The Lord of the Rings",
+        "author": "J.R.R. Tolkien",
+        "isbn": "978-0-395-19395-6",
+        "availableCopies": 3
+    },
+    {
+        "id": 3,
+        "title": "The Silmarillion",
+        "author": "J.R.R. Tolkien",
+        "isbn": "978-0-395-25730-2",
+        "availableCopies": 2
+    },
+    {
+        "id": 4,
+        "title": "The Great Gatsby",
+        "author": "F. Scott Fitzgerald",
+        "isbn": "978-0-7432-7356-5",
+        "availableCopies": 1
+    }
+  ]
+}
