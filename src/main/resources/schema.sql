@@ -18,3 +18,12 @@ CREATE TABLE IF NOT EXISTS Roles (
     role_id INTEGER,
     role_name VARCHAR(255) NOT NULL
 );
+CREATE TABLE IF NOT EXISTS Transactions (
+    transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    book_id INTEGER NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    date VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (book_id) REFERENCES Books(id)
+);
