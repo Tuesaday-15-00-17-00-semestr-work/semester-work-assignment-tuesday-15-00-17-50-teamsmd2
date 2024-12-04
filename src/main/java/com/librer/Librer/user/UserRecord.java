@@ -2,10 +2,9 @@ package com.librer.Librer.user;
 
 import jakarta.validation.constraints.*;
 
-public record User(
+public record UserRecord(
         @PositiveOrZero
         int user_id,
-        @NotEmpty
         String username,
         @NotEmpty
         String password,
@@ -16,7 +15,7 @@ public record User(
         String email
 ) {
 
-    public User {
+    public UserRecord {
 
     }
 
