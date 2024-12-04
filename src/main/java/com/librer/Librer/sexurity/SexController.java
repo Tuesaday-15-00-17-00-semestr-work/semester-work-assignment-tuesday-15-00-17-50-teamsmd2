@@ -16,7 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("")
+@RequestMapping("/auth")
 public class SexController {
 
     private final AuthenticationManager authenticationManager;
@@ -43,7 +43,7 @@ public class SexController {
                     new UsernamePasswordAuthenticationToken(user.email(), user.password())
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            return "Login successful"; // This should ideally return a JWT or session information
+            return "Login successful"; // Return a success message
         } catch (BadCredentialsException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }

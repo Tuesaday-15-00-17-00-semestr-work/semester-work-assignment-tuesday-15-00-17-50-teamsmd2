@@ -41,32 +41,35 @@ public class WebSecurityConfig {
 
     @Bean
     @Order(2)
-    public SecurityFilterChain AdminStuff(HttpSecurity http) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        //.requestMatchers("/admin/**").hasAuthority("ADMIN")
+                        // Admin access
+                        .requestMatchers("/api/users/**").hasRole("1") // Admin only
+                        // Shared access for Admin and User
+                        .requestMatchers("/api/books/**", "/api/transactions/**").hasAnyRole("1", "0")
+                        // Any other requests must be authenticated
                         .anyRequest().authenticated()
                 )
-                .securityMatcher("/admin/**")
                 .httpBasic(Customizer.withDefaults());
-
         return http.build();
     }
 
-    @Bean
-    @Order(3)
-    public SecurityFilterChain UserStuff(HttpSecurity http) throws Exception{
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().authenticated()
-                )
-                .securityMatcher("/lib/**")
-                .httpBasic(Customizer.withDefaults());
-
-        return http.build();
-    }
+//    @Bean
+//    @Order(3)
+//    public SecurityFilterChain UserStuff(HttpSecurity http) throws Exception{
+//        http
+//                .csrf(AbstractHttpConfigurer::disable)
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/**").hasRole("0")
+//                        .anyRequest().authenticated()
+//                )
+//                .securityMatcher("/**")
+//                .httpBasic(Customizer.withDefaults());
+//        return http.build();
+//
+//    }
 
     @Bean
     public AuthenticationManager authMang(AuthenticationConfiguration authconf) throws Exception{
