@@ -1,6 +1,7 @@
 package com.librer.librer.client;
 
 import javafx.application.Application;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -14,9 +15,12 @@ import javafx.scene.layout.VBox;
 
 public class LibraryManagementSystem extends Application {
 
+    // Declare the userId globally so it can be accessed across the class
+    private int userId;
+
     @Override
     public void start(Stage primaryStage) {
-        // Title
+        // Title and setup
         Label title = new Label("Library Management System");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2e86c1;");
 
@@ -24,7 +28,7 @@ public class LibraryManagementSystem extends Application {
         Label customLabel = new Label("Welcome to the Library");
         customLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #117a65;");
 
-        // Text fields with maximum width
+        // Input fields with maximum width
         TextField userNameField = new TextField();
         userNameField.setPromptText("Name");
         userNameField.setMaxWidth(200);
@@ -35,26 +39,73 @@ public class LibraryManagementSystem extends Application {
 
         // Buttons
         Button userLoginButton = new Button("Login");
-        userLoginButton.setStyle("-fx-font-size: 14px; -fx-background-color: #5dade2; -fx-text-fill: white; -fx-pref-width: 100px;");
+        userLoginButton.setStyle("-fx-font-size: 14px; -fx-background-color: #117a65; -fx-text-fill: white; -fx-pref-width: 100px;");
         Button userRegisterButton = new Button("Register");
-        userRegisterButton.setStyle("-fx-font-size: 12px; -fx-background-color: #28b463; -fx-text-fill: white; -fx-pref-width: 80px;");
-        userRegisterButton.setOnAction(e -> new RegisterUser().show());
+        userRegisterButton.setStyle("-fx-font-size: 12px; -fx-background-color: #2e86c1; -fx-text-fill: white; -fx-pref-width: 80px;");
+
+        // Action for register button
+        userRegisterButton.setOnAction(e -> {
+            Stage registrationStage = new Stage();
+            Registration registration = new Registration();
+            registration.start(registrationStage); // Open registration window
+        });
 
         // Layout for user text fields and buttons
         VBox userBox = new VBox(10, customLabel, userNameField, userPasswordField, userLoginButton, userRegisterButton);
         userBox.setAlignment(Pos.TOP_CENTER);
         userBox.setPadding(new Insets(20));
-        userBox.setStyle("-fx-background-color: #d5dbdb; -fx-border-radius: 10; -fx-padding: 20;");
 
         // Action for login button
         userLoginButton.setOnAction(e -> {
             String userName = userNameField.getText();
-            if ("admin".equalsIgnoreCase(userName)) {
-                AdministratorPage adminPage = new AdministratorPage(userName, primaryStage);
-                primaryStage.setTitle("Administrator Page");
+            String password = userPasswordField.getText();
+
+            // Authenticate using UsersFetcher
+            UsersFetcher usersFetcher = new UsersFetcher();
+            ObservableList<UsersFetcher.User> users = usersFetcher.fetchData();
+            boolean isAuthenticated = false;
+            int roleId = -1;
+
+            // Check if entered credentials match any user
+            for (UsersFetcher.User user : users) {
+                if (user.getUserName().equals(userName) && user.getPassword().equals(password)) {
+                    isAuthenticated = true;
+                    userId = user.getUserId(); // Set the userId globally
+                    roleId = user.getRoleId();
+                    break;
+                }
+            }
+
+            // Highlight fields based on incorrect input
+            if (!isAuthenticated) {
+                if (!users.stream().anyMatch(u -> u.getUserName().equals(userName))) {
+                    userNameField.setStyle("-fx-border-color: red;");
+                } else {
+                    userNameField.setStyle("");
+                }
+
+                if (!users.stream().anyMatch(u -> u.getPassword().equals(password))) {
+                    userPasswordField.setStyle("-fx-border-color: red;");
+                } else {
+                    userPasswordField.setStyle("");
+                }
             } else {
-                UserPage userPage = new UserPage(userName, primaryStage);
-                primaryStage.setTitle("User Page");
+                // Reset styles on successful login
+                userNameField.setStyle("");
+                userPasswordField.setStyle("");
+
+                // Print userId to the console
+                System.out.println("User ID: " + userId); // Print the userId
+
+                if (roleId == 1) {
+                    // Navigate to Admin Page
+                    AdministratorPage adminPage = new AdministratorPage(userName, primaryStage);
+                    primaryStage.setTitle("Administrator Page");
+                } else {
+                    // Navigate to User Page
+                    UserPage userPage = new UserPage(userName, primaryStage, userId);  // Pass userId here
+                    primaryStage.setTitle("User Page");
+                }
             }
         });
 
@@ -75,7 +126,6 @@ public class LibraryManagementSystem extends Application {
         launch(args);
     }
 }
-
 
 
 

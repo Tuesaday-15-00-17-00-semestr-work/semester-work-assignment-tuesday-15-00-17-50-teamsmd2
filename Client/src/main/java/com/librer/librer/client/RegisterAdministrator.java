@@ -10,7 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-
+// NEPOUZIVA SA || UNUSED !!!!!!!!!!!!!!!!!!!!! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 public class RegisterAdministrator {
 
     public void show() {

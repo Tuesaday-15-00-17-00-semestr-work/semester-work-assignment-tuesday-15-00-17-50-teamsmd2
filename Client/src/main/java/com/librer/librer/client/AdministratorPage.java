@@ -41,7 +41,8 @@ public class AdministratorPage {
         });
 
         manageBooksButton.setOnAction(e -> {
-            ManageBooks manageBooks = new ManageBooks();
+            BooksFetcher booksFetcher = new BooksFetcher(); // Create a BooksFetcher instance
+            ManageBooks manageBooks = new ManageBooks(booksFetcher); // Pass it to the constructor
             manageBooks.start(primaryStage, adminName);  // Opens book management window with admin's name
         });
 
