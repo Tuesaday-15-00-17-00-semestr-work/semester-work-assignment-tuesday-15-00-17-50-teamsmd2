@@ -10,8 +10,20 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 
 public class DeleteUser {
+    private final HttpClient client = HttpClient.newHttpClient();
+    private final ManageAccounts manageAccounts;
+
+    public DeleteUser(ManageAccounts manageAccounts) {
+        this.manageAccounts = manageAccounts; // Passing reference to ManageAccounts
+    }
+
     public void start(Stage parentStage) {
         Stage deleteUserStage = new Stage();
         deleteUserStage.setTitle("Delete User");
@@ -25,10 +37,18 @@ public class DeleteUser {
         deleteButton.setOnAction(e -> {
             String userId = userIdField.getText();
 
-            // Perform delete logic here (e.g., remove user from database or list)
-            System.out.println("User Deleted: ID=" + userId);
+            if (!userId.isEmpty()) {
+                String response = deleteUserById(userId);
+                System.out.println(response);  // Output the response
 
-            deleteUserStage.close(); // Close the window after deleting
+                // Refresh the table after deletion
+                manageAccounts.refreshTable();
+
+                deleteUserStage.close();  // Close the window after deleting
+            } else {
+                userIdField.setStyle("-fx-border-color: red;");
+                System.out.println("Please enter a User ID.");
+            }
         });
 
         Button cancelButton = new Button("Cancel");
@@ -54,4 +74,27 @@ public class DeleteUser {
         deleteUserStage.setScene(scene);
         deleteUserStage.show();
     }
+
+    private String deleteUserById(String userId) {
+        try {
+            String url = "http://localhost:8080/api/users/" + userId;
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .DELETE()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                return "User deleted successfully.";
+            } else {
+                return "Error: " + response.body();
+            }
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
 }
+
+

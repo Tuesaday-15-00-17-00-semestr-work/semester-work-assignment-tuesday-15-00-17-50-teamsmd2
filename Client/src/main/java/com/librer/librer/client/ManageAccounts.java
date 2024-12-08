@@ -1,5 +1,6 @@
 package com.librer.librer.client;
 
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -18,6 +19,7 @@ import javafx.scene.control.*;
 
 public class ManageAccounts {
     private String adminName;
+    private TableView<UsersFetcher.User> accountTable;
 
     public void start(Stage primaryStage, String adminName) {
         this.adminName = adminName;
@@ -28,40 +30,45 @@ public class ManageAccounts {
         Button backButton = new Button("Back");
         backButton.setStyle("-fx-font-size: 14px;");
         backButton.setOnAction(e -> {
-            AdministratorPage adminPage = new AdministratorPage(adminName, primaryStage);  // Odovzdá meno pri návrate
+            AdministratorPage adminPage = new AdministratorPage(adminName, primaryStage);
             adminPage.start(primaryStage);
         });
 
-        TableView<User> accountTable = new TableView<>();
+        accountTable = new TableView<>();
         accountTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        TableColumn<User, String> userIdColumn = new TableColumn<>("User ID");
-        userIdColumn.setCellValueFactory(cellData -> cellData.getValue().userIdProperty());
+        TableColumn<UsersFetcher.User, Integer> userIdColumn = new TableColumn<>("User ID");
+        userIdColumn.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getUserId()).asObject());
 
-        TableColumn<User, String> userNameColumn = new TableColumn<>("User Name");
-        userNameColumn.setCellValueFactory(cellData -> cellData.getValue().userNameProperty());
+        TableColumn<UsersFetcher.User, String> userNameColumn = new TableColumn<>("User Name");
+        userNameColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getUserName()));
 
-        TableColumn<User, String> emailColumn = new TableColumn<>("Email");
-        emailColumn.setCellValueFactory(cellData -> cellData.getValue().emailProperty());
+        TableColumn<UsersFetcher.User, String> emailColumn = new TableColumn<>("Email");
+        emailColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getEmail()));
+
+        TableColumn<UsersFetcher.User, String> roleColumn = new TableColumn<>("Role");
+        roleColumn.setCellValueFactory(cellData -> {
+            int roleId = cellData.getValue().getRoleId();
+            return new SimpleStringProperty(roleId == 1 ? "admin" : "user");
+        });
 
         userIdColumn.prefWidthProperty().bind(accountTable.widthProperty().multiply(0.2));
         userNameColumn.prefWidthProperty().bind(accountTable.widthProperty().multiply(0.3));
-        emailColumn.prefWidthProperty().bind(accountTable.widthProperty().multiply(0.5));
+        emailColumn.prefWidthProperty().bind(accountTable.widthProperty().multiply(0.3));
+        roleColumn.prefWidthProperty().bind(accountTable.widthProperty().multiply(0.2));
 
-        accountTable.getColumns().addAll(userIdColumn, userNameColumn, emailColumn);
+        accountTable.getColumns().addAll(userIdColumn, userNameColumn, emailColumn, roleColumn);
 
-        ObservableList<User> users = FXCollections.observableArrayList(
-                new User("1", "User One", "user1@example.com"),
-                new User("2", "User Two", "user2@example.com")
-        );
+        UsersFetcher fetcher = new UsersFetcher();
+        ObservableList<UsersFetcher.User> users = fetcher.fetchData();
 
         accountTable.setItems(users);
 
         accountTable.setRowFactory(tv -> {
-            TableRow<User> row = new TableRow<>();
+            TableRow<UsersFetcher.User> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if (!row.isEmpty() && event.getClickCount() == 2) {
-                    User clickedUser = row.getItem();
+                    UsersFetcher.User clickedUser = row.getItem();
                     openUserBooksWindow(clickedUser);
                 }
             });
@@ -71,22 +78,34 @@ public class ManageAccounts {
         Button addUserButton = new Button("Add User");
         addUserButton.setStyle("-fx-font-size: 14px;");
         addUserButton.setOnAction(e -> {
-            RegisterUser registerUser = new RegisterUser();
-            registerUser.show(); // Open Register User window
+            RegisterUser registerUser = new RegisterUser(this); // Pass ManageAccounts instance
+            Stage registerUserStage = new Stage();
+            registerUser.start(registerUserStage);
         });
 
         Button editUserButton = new Button("Edit User");
         editUserButton.setStyle("-fx-font-size: 14px;");
         editUserButton.setOnAction(e -> {
-            EditUser editUser = new EditUser();
-            Stage editUserStage = new Stage();
-            editUser.start(editUserStage);
+            // Get the selected user from the table
+            UsersFetcher.User selectedUser = accountTable.getSelectionModel().getSelectedItem();
+
+            // Check if a user is selected
+            if (selectedUser != null) {
+                // Open the EditUser window with the selected user's data
+                EditUser editUser = new EditUser();
+                Stage editUserStage = new Stage();
+                editUser.start(editUserStage, selectedUser);
+            } else {
+                // Alert the user to select a user
+                Alert alert = new Alert(Alert.AlertType.WARNING, "Please select a user to edit.", ButtonType.OK);
+                alert.showAndWait();
+            }
         });
 
         Button deleteUserButton = new Button("Delete User");
         deleteUserButton.setStyle("-fx-font-size: 14px;");
         deleteUserButton.setOnAction(e -> {
-            DeleteUser deleteUser = new DeleteUser();
+            DeleteUser deleteUser = new DeleteUser(this);
             Stage deleteUserStage = new Stage();
             deleteUser.start(deleteUserStage);
         });
@@ -106,36 +125,57 @@ public class ManageAccounts {
         primaryStage.show();
     }
 
-    private void openUserBooksWindow(User user) {
+    public void refreshTable() {
+        UsersFetcher fetcher = new UsersFetcher();
+        ObservableList<UsersFetcher.User> users = fetcher.fetchData();
+        accountTable.setItems(users);
+    }
+
+    private void openUserBooksWindow(UsersFetcher.User user) {
         Stage stage = new Stage();
         stage.setTitle("Books Borrowed by " + user.getUserName());
 
-        TableView<Book> bookTable = new TableView<>();
+        // Fetch books beforehand
+        BooksFetcher booksFetcher = new BooksFetcher();
+        ObservableList<BooksFetcher.Book> books = booksFetcher.fetchData(); // Fetch books once
+
+        // Create table for books
+        TableView<TransactionsFetcher.Transaction> bookTable = new TableView<>();
         bookTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        TableColumn<Book, String> bookIdColumn = new TableColumn<>("Book ID");
-        bookIdColumn.setCellValueFactory(cellData -> cellData.getValue().bookIdProperty());
+        // Create columns
+        TableColumn<TransactionsFetcher.Transaction, Integer> bookIdColumn = new TableColumn<>("Book ID");
+        bookIdColumn.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getBookId()).asObject());
 
-        TableColumn<Book, String> titleColumn = new TableColumn<>("Title");
-        titleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
+        TableColumn<TransactionsFetcher.Transaction, String> titleColumn = new TableColumn<>("Title");
+        titleColumn.setCellValueFactory(cellData -> {
+            int bookId = cellData.getValue().getBookId();
+            BooksFetcher.Book book = findBookById(books, bookId);  // Use a helper method to find the book
+            return new SimpleStringProperty(book != null ? book.getTitle() : "");
+        });
 
-        TableColumn<Book, String> authorColumn = new TableColumn<>("Author");
-        authorColumn.setCellValueFactory(cellData -> cellData.getValue().authorProperty());
+        TableColumn<TransactionsFetcher.Transaction, String> authorColumn = new TableColumn<>("Author");
+        authorColumn.setCellValueFactory(cellData -> {
+            int bookId = cellData.getValue().getBookId();
+            BooksFetcher.Book book = findBookById(books, bookId);  // Use a helper method to find the book
+            return new SimpleStringProperty(book != null ? book.getAuthor() : "");
+        });
 
-        TableColumn<Book, String> statusColumn = new TableColumn<>("Status");
-        statusColumn.setCellValueFactory(cellData -> cellData.getValue().statusProperty());
+        TableColumn<TransactionsFetcher.Transaction, String> statusColumn = new TableColumn<>("Status");
+        statusColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getAction()));
 
-        TableColumn<Book, String> dateColumn = new TableColumn<>("Date");
-        dateColumn.setCellValueFactory(cellData -> cellData.getValue().dateProperty());
+        TableColumn<TransactionsFetcher.Transaction, String> dateColumn = new TableColumn<>("Date");
+        dateColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDate()));
 
+        // Add columns to the table
         bookTable.getColumns().addAll(bookIdColumn, titleColumn, authorColumn, statusColumn, dateColumn);
 
-        ObservableList<Book> books = FXCollections.observableArrayList(
-                new Book("101", "Book One", "Author One", "Borrowed", "2024-01-10"),
-                new Book("102", "Book Two", "Author Two", "Returned", "2024-01-15")
-        );
+        // Fetch transactions related to the user
+        TransactionsFetcher transactionsFetcher = new TransactionsFetcher();
+        transactionsFetcher.fetchData(); // Fetch all transactions
+        ObservableList<TransactionsFetcher.Transaction> userTransactions = transactionsFetcher.getUserTransactions(user.getUserId());
 
-        bookTable.setItems(books);
+        bookTable.setItems(userTransactions);
 
         Button closeButton = new Button("Close");
         closeButton.setStyle("-fx-font-size: 14px;");
@@ -153,33 +193,17 @@ public class ManageAccounts {
         stage.show();
     }
 
-    public static class User {
-        private final SimpleStringProperty userId;
-        private final SimpleStringProperty userName;
-        private final SimpleStringProperty email;
-
-        public User(String userId, String userName, String email) {
-            this.userId = new SimpleStringProperty(userId);
-            this.userName = new SimpleStringProperty(userName);
-            this.email = new SimpleStringProperty(email);
+    // Helper method to find a book by ID
+    private BooksFetcher.Book findBookById(ObservableList<BooksFetcher.Book> books, int bookId) {
+        for (BooksFetcher.Book book : books) {
+            if (Integer.parseInt(book.getBookId()) == bookId) {
+                return book; // Return the matching book
+            }
         }
-
-        public String getUserName() {
-            return userName.get();
-        }
-
-        public SimpleStringProperty userIdProperty() {
-            return userId;
-        }
-
-        public SimpleStringProperty userNameProperty() {
-            return userName;
-        }
-
-        public SimpleStringProperty emailProperty() {
-            return email;
-        }
+        return null; // Return null if no matching book is found
     }
+
+
 
     public static class Book {
         private final SimpleStringProperty bookId;
@@ -196,28 +220,25 @@ public class ManageAccounts {
             this.date = new SimpleStringProperty(date);
         }
 
-        public SimpleStringProperty bookIdProperty() {
-            return bookId;
+        public String getBookId() {
+            return bookId.get();
         }
 
-        public SimpleStringProperty titleProperty() {
-            return title;
+        public String getTitle() {
+            return title.get();
         }
 
-        public SimpleStringProperty authorProperty() {
-            return author;
+        public String getAuthor() {
+            return author.get();
         }
 
-        public SimpleStringProperty statusProperty() {
-            return status;
+        public String getStatus() {
+            return status.get();
         }
 
-        public SimpleStringProperty dateProperty() {
-            return date;
+        public String getDate() {
+            return date.get();
         }
     }
 }
-
-
-
 

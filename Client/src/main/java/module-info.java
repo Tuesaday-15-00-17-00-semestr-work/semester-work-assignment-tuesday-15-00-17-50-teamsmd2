@@ -10,6 +10,7 @@ module com.librer.librer.client {
     requires org.kordamp.bootstrapfx.core;
     requires eu.hansolo.tilesfx;
     requires com.almasb.fxgl.all;
+    requires java.net.http;
 
     opens com.librer.librer.client to javafx.fxml;
     exports com.librer.librer.client;

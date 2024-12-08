@@ -11,9 +11,38 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpRequest.BodyPublishers;
+
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpRequest.BodyPublishers;
+
 public class AddBook {
-    public void start(Stage parentStage) {
-        // Create the AddBook window (without closing the parent)
+
+    private final HttpClient client = HttpClient.newHttpClient();
+
+    public void start(Stage parentStage, ManageBooks manageBooksPage) {
         Stage addStage = new Stage();
         addStage.setTitle("Add Book");
 
@@ -36,19 +65,53 @@ public class AddBook {
             String isbn = isbnField.getText();
             String copies = copiesField.getText();
 
-            // Here you would add the book to your system
+            // Clear previous styles
+            titleField.setStyle("-fx-border-color: none;");
+            authorField.setStyle("-fx-border-color: none;");
+            isbnField.setStyle("-fx-border-color: none;");
+            copiesField.setStyle("-fx-border-color: none;");
+
+            boolean isValid = true;
+
+            // Validation for required fields
+            if (title.isEmpty()) {
+                titleField.setStyle("-fx-border-color: red;");
+                isValid = false;
+            }
+            if (author.isEmpty()) {
+                authorField.setStyle("-fx-border-color: red;");
+                isValid = false;
+            }
+            if (isbn.isEmpty()) {
+                isbnField.setStyle("-fx-border-color: red;");
+                isValid = false;
+            }
+            if (copies.isEmpty()) {
+                copiesField.setStyle("-fx-border-color: red;");
+                isValid = false;
+            }
+
+            if (!isValid) {
+                System.out.println("All fields are required!");
+                return; // Prevent proceeding if any field is empty
+            }
+
+            String requestBody = String.format("{\"title\": \"%s\", \"author\": \"%s\", \"isbn\": \"%s\", \"availableCopies\": %s}",
+                    title, author, isbn, copies);
+            String response = makeRequest("http://localhost:8080/api/books", "POST", requestBody);
             System.out.println("Book Added: " + title + " by " + author + " (ISBN: " + isbn + ")");
-            addStage.close();  // Close the "Add Book" window after adding the book
+            addStage.close();
+
+            // After adding the book, refresh the book list
+            manageBooksPage.refreshBookList();
         });
 
         Button cancelButton = new Button("Cancel");
         cancelButton.setOnAction(e -> addStage.close());
 
-        // Layout setup
         VBox layout = new VBox(10);
         layout.getChildren().addAll(titleLabel, titleField, authorLabel, authorField, isbnLabel, isbnField, copiesLabel, copiesField, addButton);
 
-        // Place Cancel button at the bottom-right
         HBox cancelBox = new HBox(cancelButton);
         cancelBox.setAlignment(Pos.BOTTOM_RIGHT);
         cancelBox.setPadding(new Insets(10));
@@ -61,4 +124,26 @@ public class AddBook {
         addStage.setScene(scene);
         addStage.show();
     }
+
+    private String makeRequest(String url, String method, String body) {
+        try {
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(URI.create(url));
+
+            if ("POST".equalsIgnoreCase(method) && body != null) {
+                builder.POST(BodyPublishers.ofString(body))
+                        .header("Content-Type", "application/json");
+            } else {
+                builder.GET();
+            }
+
+            HttpRequest request = builder.build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return response.body();
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
 }
+
+

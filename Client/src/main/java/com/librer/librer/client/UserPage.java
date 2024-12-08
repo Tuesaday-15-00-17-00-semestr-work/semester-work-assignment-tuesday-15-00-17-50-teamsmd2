@@ -12,9 +12,12 @@ import javafx.stage.Stage;
 
 public class UserPage {
     private String userName;
+    private int userId;  // Store userId
 
-    public UserPage(String userName, Stage primaryStage) {
+    // Modify the constructor to accept userId
+    public UserPage(String userName, Stage primaryStage, int userId) {
         this.userName = userName;
+        this.userId = userId;  // Store the userId
 
         // Title and user name
         Label title = new Label("Library Management System");
@@ -32,14 +35,14 @@ public class UserPage {
 
         // Action for "My Books" button
         myBooksButton.setOnAction(e -> {
-            MyBooks myBooks = new MyBooks();
+            MyBooks myBooks = new MyBooks(userId);  // Pass userId here
             myBooks.start(primaryStage, userName); // Opens the MyBooks window
         });
 
         // Action for "Available Books" button
         availableBooksButton.setOnAction(e -> {
-            AvailableBooks availableBooks = new AvailableBooks();
-            availableBooks.start(primaryStage, userName); // Opens the AvailableBooks window
+            AvailableBooks availableBooks = new AvailableBooks(userId); // Pass userId here
+            availableBooks.start(primaryStage, userName, userId); // Pass userId to AvailableBooks
         });
 
         // Logout button
@@ -75,6 +78,8 @@ public class UserPage {
         primaryStage.setTitle("User Page");  // Change window title
     }
 }
+
+
 
 
 
