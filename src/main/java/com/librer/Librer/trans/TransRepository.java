@@ -41,8 +41,18 @@ public class TransRepository {
         var updated = jdbcClient.sql("INSERT INTO Transactions (user_id, book_id, action, date) VALUES (?, ?, ?, ?)")
                 .params(List.of(transaction.userId(), transaction.bookId(), transaction.action(), transaction.date()))
                 .update();
-        Assert.state(updated == 1, "Failed to insert Transaction for User ID: " + transaction.userId());
+        if (transaction.action().equals("Borrowed")) {
+            var updated2 = jdbcClient.sql("UPDATE Books SET availableCopies = availableCopies - 1 WHERE id = ?")
+                    .params(List.of(transaction.bookId()))
+                    .update();
+        } //elseif
+        else if (transaction.action().equals("Returned")) {
+            var updated2 = jdbcClient.sql("UPDATE Books SET availableCopies = availableCopies + 1 WHERE id = ?")
+                    .params(List.of(transaction.bookId()))
+                    .update();
+        }
     }
+
 
     // Update an existing transaction
     public void update(Trans transaction, int transactionId) {
