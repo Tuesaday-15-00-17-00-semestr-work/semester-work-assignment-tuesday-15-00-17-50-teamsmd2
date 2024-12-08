@@ -79,7 +79,31 @@ The database consists of four main tables:
 1. **User Dashboard**: Allows users to browse and borrow books.
 2. **Admin Panel**: Provides administrators with tools to manage the inventory.
 
-![User Interface](img5png)
+Login and register screen
+
+![obrázok](https://github.com/user-attachments/assets/fa2c0d71-bb2a-4435-b282-c1dd84711654)
+
+If an administrator logs in, the main administrator dashboard is displayed.
+
+![obrázok](https://github.com/user-attachments/assets/839854cb-b42c-4635-bda6-6d2bbc50d42a)
+
+![obrázok](https://github.com/user-attachments/assets/b163a165-e8ba-4631-92f1-95c6393c044e)
+
+![obrázok](https://github.com/user-attachments/assets/d5cebc0c-7af1-4344-b5a4-490777322d1f)
+
+The user's transactions can be displayed by double-clicking on the user's name.
+
+![obrázok](https://github.com/user-attachments/assets/02adeee1-b55b-4437-832a-2158ab024761)
+
+If a user logs in, the main user dashboard is displayed.
+
+![obrázok](https://github.com/user-attachments/assets/5a264b3c-5f99-4117-b99b-2c593a974e36)
+
+A user can also borrow two or more copies of the same book.
+
+![obrázok](https://github.com/user-attachments/assets/e6c7a5c3-eee5-4acc-aacb-60477ed35725)
+
+![obrázok](https://github.com/user-attachments/assets/c84292db-7e55-45c1-9c9a-9c332b73d0a0)
 
 ---
 
