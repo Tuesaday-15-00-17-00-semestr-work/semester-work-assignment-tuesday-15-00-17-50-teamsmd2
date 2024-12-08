@@ -28,31 +28,35 @@ public class BookController {
 
     @GetMapping("/{id}")
     Book findById(@PathVariable int id) {
-
         Optional<Book> book = bookRepository.findById(id);
         if (book.isEmpty()) {
             throw new BookNotFoundException();
         }
         return book.get();
     }
-    //create
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
     void create(@Valid @RequestBody Book book) {
         bookRepository.create(book);
     }
-    // put
+
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/{id}")
     void update(@Valid @RequestBody Book book, @PathVariable int id) {
         bookRepository.update(book, id);
     }
 
-    // delete
+    // Instead of removing it, set availableCopies to 0
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     void delete(@PathVariable int id) {
-        bookRepository.delete(id);
+        Optional<Book> book = bookRepository.findById(id);
+        if (book.isPresent()) {
+            bookRepository.setAvailableCopiesToZero(id);
+        } else {
+            throw new BookNotFoundException();
+        }
     }
 
     @GetMapping("/search/{author}")
@@ -63,5 +67,4 @@ public class BookController {
         }
         return books;
     }
-
 }

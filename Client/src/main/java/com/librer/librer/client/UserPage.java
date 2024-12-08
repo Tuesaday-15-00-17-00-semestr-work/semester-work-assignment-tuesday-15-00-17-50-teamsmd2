@@ -19,7 +19,7 @@ public class UserPage {
         this.userName = userName;
         this.userId = userId;  // Store the userId
 
-        // Title and user name
+        // Title and username
         Label title = new Label("Library Management System");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
@@ -53,7 +53,7 @@ public class UserPage {
             new LibraryManagementSystem().start(primaryStage);
         });
 
-        // Layout for top section (Title, User Name)
+        // Layout for top section (Title, UserName)
         HBox headerBox = new HBox(20, title);
         headerBox.setAlignment(Pos.CENTER_LEFT);
         headerBox.setPadding(new Insets(20));

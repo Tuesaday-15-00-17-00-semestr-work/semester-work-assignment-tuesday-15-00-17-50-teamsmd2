@@ -47,11 +47,12 @@ public class BookRepository {
         Assert.state(updated == 1, "Failed to update Book" + book.title());
     }
 
-    public void delete(int id) {
-        var updated = jdbcClient.sql("DELETE FROM books WHERE id = ?")
-                .params(List.of(id))
+    // Set availableCopies to 0
+    public void setAvailableCopiesToZero(int id) {
+        var updated = jdbcClient.sql("UPDATE books SET availableCopies = ? WHERE id = ?")
+                .params(List.of(0, id))
                 .update();
-        Assert.state(updated == 1, "Failed to delete Book with id" + id);
+        Assert.state(updated == 1, "Failed to set availableCopies to 0 for Book with id " + id);
     }
 
     public int count() {
@@ -60,10 +61,10 @@ public class BookRepository {
     }
 
     public void saveAll(List<Book> books) {
-        books.stream().forEach(this::create);
+        books.forEach(this::create);
     }
 
-    public  List<Book> findAllByAuthor(String author) {
+    public List<Book> findAllByAuthor(String author) {
         return jdbcClient.sql("SELECT * FROM books WHERE author LIKE ?")
                 .params(List.of("%" + author + "%"))
                 .query(Book.class)

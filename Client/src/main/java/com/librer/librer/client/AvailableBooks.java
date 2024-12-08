@@ -94,7 +94,13 @@ public class AvailableBooks {
         primaryStage.setTitle("Available Books");
         primaryStage.show();
     }
+
+    // Method to refresh available books
+    public void refreshAvailableBooks(Stage primaryStage, String userName, int userId) {
+        start(primaryStage, userName, userId); // Call start again to reload data
+    }
 }
+
 
 
 

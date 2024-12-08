@@ -10,7 +10,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -19,7 +21,7 @@ public class MyBooks {
     private final TransactionsFetcher transactionsFetcher = new TransactionsFetcher();
     private int userId;
     private Set<Integer> displayedBookIds = new HashSet<>();
-    private TableView<BooksFetcher.Book> bookTable; // Make bookTable a class-level variable
+    private TableView<BooksFetcher.Book> bookTable;
 
     public MyBooks(int userId) {
         this.userId = userId;
@@ -29,7 +31,7 @@ public class MyBooks {
         Label titleLabel = new Label("My Books");
         titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
-        bookTable = new TableView<>(); // Initialize bookTable here
+        bookTable = new TableView<>();
         bookTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<BooksFetcher.Book, String> bookIdColumn = new TableColumn<>("Book ID");
@@ -47,49 +49,49 @@ public class MyBooks {
 
         bookTable.getColumns().addAll(bookIdColumn, titleColumn, authorColumn);
 
-        // Fetch books data
         ObservableList<BooksFetcher.Book> books = booksFetcher.fetchData();
         System.out.println("Books loaded: " + books.size());
 
-        // Fetch transactions and filter by userId
         ObservableList<TransactionsFetcher.Transaction> transactions = transactionsFetcher.fetchData();
         ObservableList<TransactionsFetcher.Transaction> userTransactions = transactionsFetcher.getUserTransactions(userId);
 
         ObservableList<BooksFetcher.Book> userBooks = FXCollections.observableArrayList();
 
-        // Track borrowed books to check if they were later returned
-        Set<Integer> returnedBooks = new HashSet<>();
+        // Map to track borrow and return counts for each book
+        Map<Integer, Integer> borrowCount = new HashMap<>();
+        Map<Integer, Integer> returnCount = new HashMap<>();
 
-        // Mark books as returned
         for (TransactionsFetcher.Transaction transaction : userTransactions) {
-            if ("Returned".equals(transaction.getAction())) {
-                returnedBooks.add(transaction.getBookId());
+            int bookId = transaction.getBookId();
+            if ("Borrowed".equals(transaction.getAction())) {
+                borrowCount.put(bookId, borrowCount.getOrDefault(bookId, 0) + 1);
+            } else if ("Returned".equals(transaction.getAction())) {
+                returnCount.put(bookId, returnCount.getOrDefault(bookId, 0) + 1);
             }
         }
 
-        // Add borrowed but not returned books
-        for (TransactionsFetcher.Transaction transaction : userTransactions) {
-            if ("Borrowed".equals(transaction.getAction()) && !returnedBooks.contains(transaction.getBookId())) {
-                for (BooksFetcher.Book book : books) {
-                    if (Integer.parseInt(book.getBookId()) == transaction.getBookId()) {
-                        userBooks.add(book);
-                        displayedBookIds.add(transaction.getBookId());  // Store ID of displayed book
-                        break;
-                    }
+        // Add books to the list based on borrow - return count difference
+        for (BooksFetcher.Book book : books) {
+            int bookId = Integer.parseInt(book.getBookId());
+            int borrowed = borrowCount.getOrDefault(bookId, 0);
+            int returned = returnCount.getOrDefault(bookId, 0);
+
+            int timesToAdd = borrowed - returned;
+            if (timesToAdd > 0) {
+                for (int i = 0; i < timesToAdd; i++) {
+                    userBooks.add(book);
+                    displayedBookIds.add(bookId);
                 }
             }
         }
 
-        // Set the filtered books to the table
         bookTable.setItems(userBooks);
 
-        // Add Return Book button
         Button returnButton = new Button("Return Book");
         returnButton.setStyle("-fx-font-size: 14px; -fx-pref-width: 100px; -fx-pref-height: 30px;");
         returnButton.setOnAction(e -> {
-            // Zavoláme ReturnBook, kde odovzdáme parentStage, myBooks a userId
             ReturnBook returnBook = new ReturnBook();
-            returnBook.start(primaryStage, this, userId); // Opravené predávanie správnych parametrov
+            returnBook.start(primaryStage, this, userId);
         });
 
         Button backButton = new Button("Back");
@@ -113,52 +115,53 @@ public class MyBooks {
         primaryStage.show();
     }
 
-    // Getter for displayedBookIds to use in ReturnBook
     public Set<Integer> getDisplayedBookIds() {
         return displayedBookIds;
     }
 
-    // Method to remove a returned book from displayedBookIds
     public void removeReturnedBook(int bookId) {
         displayedBookIds.remove(bookId);
-        refreshBookList(); // Refresh the view after removing the book
+        refreshBookList();
     }
 
-    // Method to refresh the book list after a book is returned
     public void refreshBookList() {
-        ObservableList<BooksFetcher.Book> books = booksFetcher.fetchData(); // Fetch updated books
+        ObservableList<BooksFetcher.Book> books = booksFetcher.fetchData();
         ObservableList<BooksFetcher.Book> userBooks = FXCollections.observableArrayList();
 
-        // Fetch transactions and filter by userId
         ObservableList<TransactionsFetcher.Transaction> transactions = transactionsFetcher.fetchData();
         ObservableList<TransactionsFetcher.Transaction> userTransactions = transactionsFetcher.getUserTransactions(userId);
 
-        Set<Integer> returnedBooks = new HashSet<>();
+        Map<Integer, Integer> borrowCount = new HashMap<>();
+        Map<Integer, Integer> returnCount = new HashMap<>();
 
-        // Mark books as returned
         for (TransactionsFetcher.Transaction transaction : userTransactions) {
-            if ("Returned".equals(transaction.getAction())) {
-                returnedBooks.add(transaction.getBookId());
+            int bookId = transaction.getBookId();
+            if ("Borrowed".equals(transaction.getAction())) {
+                borrowCount.put(bookId, borrowCount.getOrDefault(bookId, 0) + 1);
+            } else if ("Returned".equals(transaction.getAction())) {
+                returnCount.put(bookId, returnCount.getOrDefault(bookId, 0) + 1);
             }
         }
 
-        // Add borrowed but not returned books
-        for (TransactionsFetcher.Transaction transaction : userTransactions) {
-            if ("Borrowed".equals(transaction.getAction()) && !returnedBooks.contains(transaction.getBookId())) {
-                for (BooksFetcher.Book book : books) {
-                    if (Integer.parseInt(book.getBookId()) == transaction.getBookId()) {
-                        userBooks.add(book);
-                        displayedBookIds.add(transaction.getBookId());
-                        break;
-                    }
+        for (BooksFetcher.Book book : books) {
+            int bookId = Integer.parseInt(book.getBookId());
+            int borrowed = borrowCount.getOrDefault(bookId, 0);
+            int returned = returnCount.getOrDefault(bookId, 0);
+
+            int timesToAdd = borrowed - returned;
+            if (timesToAdd > 0) {
+                for (int i = 0; i < timesToAdd; i++) {
+                    userBooks.add(book);
+                    displayedBookIds.add(bookId);
                 }
             }
         }
 
-        // Set the updated list to the table
         bookTable.setItems(userBooks);
     }
 }
+
+
 
 
 

@@ -7,6 +7,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+
 public class TransactionsFetcher {
     private final HttpClient client = HttpClient.newHttpClient();
     private ObservableList<Transaction> transactions = FXCollections.observableArrayList();
@@ -39,18 +40,18 @@ public class TransactionsFetcher {
 
     private void parseTransactionsResponse(String response) {
         try {
-            response = response.substring(1, response.length() - 1); // Odstrániť vonkajšie hranaté zátvorky
+            response = response.substring(1, response.length() - 1); // Remove outer square brackets
             String[] transactionEntries = response.split("},\\{");
 
             for (String entry : transactionEntries) {
-                entry = entry.replaceAll("[{}]", ""); // Odstrániť zložené zátvorky
+                entry = entry.replaceAll("[{}]", ""); // Remove curly brackets
 
                 String[] fields = entry.split(",");
-                int transactionId = Integer.parseInt(extractValue(fields[0])); // transaction_id ako int
-                int userId = Integer.parseInt(extractValue(fields[1])); // user_id ako int
-                int bookId = Integer.parseInt(extractValue(fields[2])); // book_id ako int
-                String action = extractValue(fields[3]); // action ako String
-                String date = extractValue(fields[4]); // date ako String
+                int transactionId = Integer.parseInt(extractValue(fields[0]));
+                int userId = Integer.parseInt(extractValue(fields[1]));
+                int bookId = Integer.parseInt(extractValue(fields[2]));
+                String action = extractValue(fields[3]);
+                String date = extractValue(fields[4]);
 
                 transactions.add(new Transaction(transactionId, userId, bookId, action, date));
             }

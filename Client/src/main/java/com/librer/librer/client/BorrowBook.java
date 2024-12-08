@@ -14,7 +14,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import javafx.scene.control.Alert;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -31,6 +30,7 @@ public class BorrowBook {
         Stage borrowStage = new Stage();
         borrowStage.setTitle("Borrow Book");
 
+        // UI elements
         Label bookIdLabel = new Label("Book ID:");
         TextField bookIdField = new TextField();
 
@@ -56,21 +56,19 @@ public class BorrowBook {
 
         borrowBookButton.setOnAction(e -> {
             if (validateInput(bookIdField, availableBooks)) {
-                String bookId = bookIdField.getText();
-                BooksFetcher.Book book = getBookDetails(bookId, availableBooks); // Retrieve book details
+                int bookId = Integer.parseInt(bookIdField.getText());
+                BooksFetcher.Book book = getBookDetails(bookId, availableBooks);
                 if (book != null) {
                     MyBooks myBooks = new MyBooks(userId);
-                    handleBorrowAction(book, myBooks, borrowStage, parentStage);
-                } else {
-                    showAlert("Error", "Book ID not found.");
+                    handleBorrowAction(book, myBooks, borrowStage, parentStage, availableBooksPage);
                 }
             }
         });
     }
 
-    private BooksFetcher.Book getBookDetails(String bookId, ObservableList<BooksFetcher.Book> availableBooks) {
+    private BooksFetcher.Book getBookDetails(int bookId, ObservableList<BooksFetcher.Book> availableBooks) {
         for (BooksFetcher.Book book : availableBooks) {
-            if (book.getBookId().equals(bookId)) {
+            if (Integer.parseInt(book.getBookId()) == bookId) {
                 return book;
             }
         }
@@ -78,41 +76,46 @@ public class BorrowBook {
     }
 
     private boolean validateInput(TextField bookIdField, ObservableList<BooksFetcher.Book> availableBooks) {
-        String bookId = bookIdField.getText();
-        bookIdField.setStyle("-fx-border-color: none;"); // Clear errors
+        String bookIdText = bookIdField.getText().trim();
+        bookIdField.setStyle("-fx-border-color: none;");
 
-        if (bookId.isEmpty()) {
+        if (bookIdText.isEmpty()) {
             bookIdField.setStyle("-fx-border-color: red;");
             return false;
         }
 
-        BooksFetcher.Book book = getBookDetails(bookId, availableBooks);
-        if (book == null) {
+        try {
+            int bookId = Integer.parseInt(bookIdText);
+            BooksFetcher.Book book = getBookDetails(bookId, availableBooks);
+            if (book == null) {
+                bookIdField.setStyle("-fx-border-color: red;");
+                return false;
+            }
+        } catch (NumberFormatException e) {
             bookIdField.setStyle("-fx-border-color: red;");
-            return false; // Invalid bookId
+            return false;
         }
 
-        return true; // Valid input
+        return true;
     }
 
-    private void handleBorrowAction(BooksFetcher.Book book, MyBooks myBooks, Stage borrowStage, Stage parentStage) {
+    private void handleBorrowAction(BooksFetcher.Book book, MyBooks myBooks, Stage borrowStage, Stage parentStage, AvailableBooks availableBooksPage) {
+        int transactionId = getNextTransactionId();
+
         String requestBody = String.format(
-                "[{\"transactionId\": %d, \"userId\": %d, \"bookId\": %s, \"action\": \"borrow\", \"date\": \"%s\"}]",
-                getNextTransactionId(), userId, book.getBookId(), book.getTitle(), book.getAuthor(), book.getIsbn(), getCurrentDate()
+                "{\"transactionId\": %d, \"userId\": %d, \"bookId\": %s, \"action\": \"Borrowed\", \"date\": \"%s\"}",
+                transactionId, userId, Integer.parseInt(book.getBookId()), getCurrentDate()
         );
 
         String response = makeRequest("http://localhost:8080/api/transactions", "POST", requestBody);
 
-        if (response.contains("Error")) {
-            showAlert("Error", "Failed to borrow the book. Please try again.");
+        borrowStage.close();
+
+        if (!response.contains("Error")) {
+            availableBooksPage.refreshAvailableBooks(parentStage, "User Name", userId);
         } else {
-            System.out.println("Book Borrowed: ID " + book.getBookId());
-            myBooks.refreshBookList();
-
-            borrowStage.close();
-
-            MyBooks newMyBooks = new MyBooks(userId);
-            newMyBooks.start(parentStage, "User Name");
+            System.out.println("Error: " + response);
+            availableBooksPage.refreshAvailableBooks(parentStage, "User Name", userId);
         }
     }
 
@@ -122,7 +125,7 @@ public class BorrowBook {
     }
 
     private int getNextTransactionId() {
-        return 3; // Placeholder for real logic
+        return 3;  // Placeholder for generating transaction IDs
     }
 
     private String makeRequest(String url, String method, String body) {
@@ -139,20 +142,26 @@ public class BorrowBook {
 
             HttpRequest request = builder.build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                return "Error: " + response.body();
+
+            }
+
             return response.body();
         } catch (Exception e) {
+            e.printStackTrace();
             return "Error: " + e.getMessage();
+
         }
     }
-
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
 }
+
+
+
+
+
+
 
 
 

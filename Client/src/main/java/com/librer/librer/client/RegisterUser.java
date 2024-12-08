@@ -1,14 +1,11 @@
 package com.librer.librer.client;
 
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -23,11 +20,9 @@ public class RegisterUser {
     }
 
     public void start(Stage stage) {
-        // Výstupná plocha
         TextArea outputArea = new TextArea();
         outputArea.setEditable(false);
 
-        // Nadpis a formulár
         Label titleLabel = new Label("Add User");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
@@ -43,21 +38,19 @@ public class RegisterUser {
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Enter password");
 
-        // Tlačidlo pre pridanie používateľa
+        // Button to add user
         Button addButton = new Button("Add User");
         addButton.setOnAction(e -> {
             boolean isValid = true;
             String username = nameField.getText();
             String password = passwordField.getText();
-            int roleId = 0; // Predvolená rola
+            int roleId = 0;
             String email = emailField.getText();
 
-            // Resetovanie farieb polí
             emailField.setStyle("-fx-border-color: none;");
             nameField.setStyle("-fx-border-color: none;");
             passwordField.setStyle("-fx-border-color: none;");
 
-            // Validačné pravidlá
             if (email.isEmpty() || !email.contains("@") || email.indexOf('@') == 0 || email.indexOf('@') == email.length() - 1) {
                 emailField.setStyle("-fx-border-color: red;");
                 isValid = false;
@@ -76,22 +69,20 @@ public class RegisterUser {
                         username, password, roleId, email);
                 String response = makeRequest("http://localhost:8080/api/users", "POST", requestBody);
                 outputArea.setText(response);
-                System.out.println("Používateľ bol pridaný: " + username + " s emailom: " + email);
+                System.out.println("The user has been added: " + username + " with email: " + email);
 
                 // Update the table after user is added
                 manageAccounts.refreshTable();
 
                 stage.close();
             } else {
-                outputArea.setText("Vyplňte všetky požadované polia.");
+                outputArea.setText("Please fill in all required fields.");
             }
         });
 
-        // Tlačidlo pre zrušenie
         Button cancelButton = new Button("Cancel");
         cancelButton.setOnAction(e -> stage.close());
 
-        // Rozloženie prvkov
         VBox inputBox = new VBox(10, emailLabel, emailField, nameLabel, nameField, passwordLabel, passwordField, addButton);
         inputBox.setAlignment(Pos.CENTER);
         inputBox.setStyle("-fx-padding: 20px;");
@@ -100,7 +91,6 @@ public class RegisterUser {
         buttonBox.setAlignment(Pos.CENTER_RIGHT);
         buttonBox.setPadding(new Insets(10));
 
-        // Hlavné rozloženie
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(20));
         root.setTop(titleLabel);
@@ -109,7 +99,6 @@ public class RegisterUser {
         root.setBottom(buttonBox);
         BorderPane.setAlignment(buttonBox, Pos.BOTTOM_RIGHT);
 
-        // Nastavenie scény
         Scene scene = new Scene(root, 300, 350);
         stage.setScene(scene);
         stage.setTitle("Add User");
@@ -132,7 +121,7 @@ public class RegisterUser {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             return response.body();
         } catch (Exception e) {
-            return "Chyba: " + e.getMessage();
+            return "Error: " + e.getMessage();
         }
     }
 }

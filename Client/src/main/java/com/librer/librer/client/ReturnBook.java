@@ -90,6 +90,9 @@ public class ReturnBook {
                 getNextTransactionId(), userId, bookId, getCurrentDate()
         );
 
+        // Print the request body to console
+        System.out.println("Request Body: " + requestBody);
+
         String response = makeRequest("http://localhost:8080/api/transactions", "POST", requestBody);
 
         if (response.contains("Error")) {
@@ -103,7 +106,7 @@ public class ReturnBook {
 
             // Create and show a new MyBooks window
             MyBooks newMyBooks = new MyBooks(userId);
-            newMyBooks.start(parentStage, "User Name"); // Pass the user name if needed
+            newMyBooks.start(parentStage, "User Name"); // Pass the username if needed
         }
     }
 

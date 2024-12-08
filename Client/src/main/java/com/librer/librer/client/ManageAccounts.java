@@ -1,7 +1,6 @@
 package com.librer.librer.client;
 
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -94,7 +93,7 @@ public class ManageAccounts {
                 // Open the EditUser window with the selected user's data
                 EditUser editUser = new EditUser();
                 Stage editUserStage = new Stage();
-                editUser.start(editUserStage, selectedUser);
+                editUser.start(primaryStage, selectedUser, adminName);
             } else {
                 // Alert the user to select a user
                 Alert alert = new Alert(Alert.AlertType.WARNING, "Please select a user to edit.", ButtonType.OK);
