@@ -21,13 +21,13 @@ public class UserController {
     }
 
     @GetMapping("")
-    List<UserRecord> findAll() {
+    List<User> findAll() {
         return userRepository.findAll();
     }
 
     @GetMapping("/{userId}")
-    UserRecord findById(@PathVariable int userId) {
-        Optional<UserRecord> user = userRepository.findById(userId);
+    User findById(@PathVariable int userId) {
+        Optional<User> user = userRepository.findById(userId);
         if (user.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
@@ -36,13 +36,13 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("")
-    void create(@Valid @RequestBody UserRecord user) {
+    void create(@Valid @RequestBody User user) {
         userRepository.create(user);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/{userId}")
-    void update(@Valid @RequestBody UserRecord user, @PathVariable int userId) {
+    void update(@Valid @RequestBody User user, @PathVariable int userId) {
         userRepository.update(user, userId);
     }
 
@@ -53,8 +53,8 @@ public class UserController {
     }
 
     @GetMapping("/search/{username}")
-    List<UserRecord> search(@PathVariable String username) {
-        List<UserRecord> users = userRepository.findAllByUsername(username);
+    List<User> search(@PathVariable String username) {
+        List<User> users = userRepository.findAllByUsername(username);
         if (users.isEmpty()) {
             throw new UserNotFoundException();
         }

@@ -47,7 +47,7 @@ public class BookController {
         bookRepository.update(book, id);
     }
 
-    // Instead of removing it, set availableCopies to 0
+    // Namiesto odstránenia nastaví availableCopies na 0
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     void delete(@PathVariable int id) {

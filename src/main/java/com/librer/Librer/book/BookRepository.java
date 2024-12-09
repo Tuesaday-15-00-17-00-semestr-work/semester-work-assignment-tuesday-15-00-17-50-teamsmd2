@@ -47,7 +47,7 @@ public class BookRepository {
         Assert.state(updated == 1, "Failed to update Book" + book.title());
     }
 
-    // Set availableCopies to 0
+    // Nastaví availableCopies na 0
     public void setAvailableCopiesToZero(int id) {
         var updated = jdbcClient.sql("UPDATE books SET availableCopies = ? WHERE id = ?")
                 .params(List.of(0, id))
@@ -71,3 +71,4 @@ public class BookRepository {
                 .list();
     }
 }
+

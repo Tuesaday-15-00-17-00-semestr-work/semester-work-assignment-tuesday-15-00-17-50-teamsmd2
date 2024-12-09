@@ -53,7 +53,6 @@ public class TransRepository {
         }
     }
 
-
     // Update an existing transaction
     public void update(Trans transaction, int transactionId) {
         var updated = jdbcClient.sql("UPDATE Transactions SET user_id = ?, book_id = ?, action = ?, date = ? WHERE transaction_id = ?")
@@ -104,4 +103,6 @@ public class TransRepository {
                 .query(Trans.class)
                 .list();
     }
+
+
 }
