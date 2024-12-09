@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS Users (
     username VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
     role_id INTEGER NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    FOREIGN KEY (role_id) REFERENCES Roles(role_id) CHECK(role_id BETWEEN 0 AND 1)
+    email VARCHAR(255) NOT NULL,
+    FOREIGN KEY (role_id) REFERENCES Roles(role_id)
 );
 CREATE TABLE IF NOT EXISTS Roles (
     role_id INTEGER,
